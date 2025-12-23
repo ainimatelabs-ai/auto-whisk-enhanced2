@@ -1,0 +1,47 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install PySide6==6.6.1 requests==2.31.0 pyinstaller==6.3.0
+    
+    - name: Build EXE with PyInstaller
+      run: |
+        pyinstaller --onefile --windowed --name="AutoWhisk_Enhanced_v8.5" auto_whisk_enhanced_v8.5.py
+    
+    - name: Upload EXE as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: AutoWhisk-Enhanced-Windows
+        path: dist/AutoWhisk_Enhanced_v8.5.exe
+        retention-days: 30
+    
+    - name: Create Release
+      if: github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v8.5.0-auto
+        name: Auto Whisk Enhanced v8.5.0
+        draft: false
+        prerelease: false
+        files: |
+          dist/AutoWhisk_Enhanced_v8.5.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
